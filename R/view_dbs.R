@@ -5,7 +5,7 @@
 
 view_dbs <- function() {
   #If a database was not created insert an empty data frame on the workbook
-  path_mutdb <- sprintf("%s/mitorDB/DB/RDS_DB.RDS", Sys.getenv('R_LIBS_USER'))
+  path_mutdb <- sprintf("%s/mitorDB/DB/RDS_DB.rds", Sys.getenv('R_LIBS_USER'))
 
   if(file.exists(path_mutdb)) {
     mutDB <- readRDS(path_mutdb)
