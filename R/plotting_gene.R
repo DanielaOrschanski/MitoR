@@ -102,7 +102,6 @@ generateTXT_gene <- function(patient_ID) {
   colnames(mutations) <- c("ALT", "POS", "REF")
 
   # Load BED file with: Gene name, start position, end position
-  #gene_start_end <- readRDS(sprintf("%s/MitoRSoftware/bedfileMito.RDS", mitor_files))
   data("bedfileMito")
   gene_start_end <- bed
 
@@ -119,7 +118,7 @@ generateTXT_gene <- function(patient_ID) {
 #' @title Modifies the BED table. Makes a gene longer or shorter depending on the patients variants.
 #' @description Depending on the position of the insertion or deletion of the variant, it changes the length of the gene's start and end
 #' @param mutations DataFrame of colomns REF-POS-ALT
-#' @param start_end_gene BED file - sprintf("%s/MitoRSoftware/bedfileMito.RDS", mitor_files)
+#' @param start_end_gene BED file 
 #' @return Updated BED table as a DataFrame object
 indels_in_gene <- function(mutations, start_end_gene) {
   j <- 1
