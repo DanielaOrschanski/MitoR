@@ -4,7 +4,8 @@
 #' @export
 
 bedfileMito <- function() {
-  load("~/MitoR/data/bedfileMito.RData")
+  load(paste(Sys.getenv('R_LIBS_USER'), "/MitoR/data/bedfileMito.RData", sep=""))
+  #load("~/MitoR/data/bedfileMito.RData")
 }
 
 
