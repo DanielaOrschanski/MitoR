@@ -79,6 +79,8 @@ detection_cnv <- function(path_dir, minoverlap, transit) {
   id <- basename(path_dir)
 
   # Avoid using the patient as a reference for itself
+  initialCDB <- ControlDB # save the previous controlDB complete
+  
   if(id %in% colnames(ControlDB)) {
     indic <- which(colnames(ControlDB) == id)
     Pcounts <- ControlDB[, indic]
@@ -142,6 +144,7 @@ detection_cnv <- function(path_dir, minoverlap, transit) {
   message("The graph has been succesfully generated")
 
   GenesDB <- update_DB_cnv(CNV_calls, id, ControlDB, PatientsDB, GenesDB)
+  ControlDB <- initialCDB #if the patient was on ControlDB it has to be removed just for the analysis. ##
   saveRDS(list(ControlDB, PatientsDB, GenesDB), file = paste(Sys.getenv('R_LIBS_USER'), "/mitorDB/DB/cnvDB.RDS", sep=""))
   message("Genes DB has been succesfully updated")
 
