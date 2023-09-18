@@ -126,6 +126,15 @@ addFreq_MitoR <- function(new_patient) {
         frequency_of_interest <- c(frequency_of_interest, Freq_MitoR$Freq_MitoR[i])
         j <- j + 1
         i <- i + 1
+      } else {
+        # When the mutation POS matches but the ALT doesnt it means we have a new mutation.
+        # Meaning we follow the same path as when we are adding a new patient.
+        new_patient$Freq_MitoR[j] <- sprintf("%s%s", 100/(newAmount), "%")
+        frequency_of_interest <- c(frequency_of_interest, new_patient$Freq_MitoR[j])
+
+        newMut <- rbind(new_patient[j, ], newMut)
+        j <- j + 1
+        i <- i + 1
       }
     }
   }
