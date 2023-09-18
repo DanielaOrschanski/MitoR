@@ -102,7 +102,7 @@ generateTXT_gene <- function(patient_ID) {
   colnames(mutations) <- c("ALT", "POS", "REF")
 
   # Load BED file with: Gene name, start position, end position
-  data("bedfileMito")
+  #data("bedfileMito")
   gene_start_end <- bed
 
   # Dealing with insertions and deletions on the length of the gene
