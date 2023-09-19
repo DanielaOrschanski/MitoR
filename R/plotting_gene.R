@@ -103,7 +103,7 @@ generateTXT_gene <- function(patient_ID) {
 
   # Load BED file with: Gene name, start position, end position
   #data("bedfileMito")
-  gene_start_end <- bed
+  gene_start_end <- bedSNP
 
   # Dealing with insertions and deletions on the length of the gene
   gene_start_end <- indels_in_gene(mutations, gene_start_end)
