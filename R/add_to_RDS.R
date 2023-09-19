@@ -6,56 +6,71 @@
 #' @return Vector of frequencies from MitoR DB to add to the patient's report
 
 add_to_RDS <- function(filtered_DF, filtered_DF2, patient_ID) {
-
+  
+  print("estoy en add_to_RDS")
+  
   mitor_db <- sprintf("%s/mitorDB/DB", Sys.getenv('R_LIBS_USER'))
   new_patient <- filtered_DF
   filter_params <- filtered_DF2["Filter_Params"] # Filter parameters
   date <- filtered_DF2["Date"] # Date of analysis
   mutations <- paste(new_patient[, "REF"], new_patient[, "POS"], new_patient[, "ALT"], sep = "/") # REF/POS/ALT of every mutation
-
+  
   # Once the data is load, let's begin
   if (!"RDS_DB.rds" %in% list.files(mitor_db)){
+    
+    print("entre al primer if de add_to_RDS")
     # Add the frequency colomn with 100% and count = 1 and then sort all the colomns
     new_patient <- cbind(new_patient, Freq_MitoR = "100 %", Count = 1)
-
+    
     new_patient <- new_patient[c("CHROM", "POS", "REF", "ALT", "Freq_HMTVAR", "Freq_MitoR", "Count", "clinVAR",	"dbSNP",	"MitoMap",	"Omim",	"Disease", "Franklin", "VarSome")]
-
+    
     # Add the previous variables to the DB
     RDS_DB <- list(Freq_MitoR = new_patient, list(Filter_Params = filter_params, Date = format(Sys.Date(), "%d/%m/%Y"),
-                                                 Mutations = mutations))
+                                                  Mutations = mutations))
     names(RDS_DB)[length(RDS_DB)] <- patient_ID
     frequency_of_interest <- RDS_DB$Freq_MitoR$Freq_MitoR
-
+    
     saveRDS(RDS_DB, sprintf("%s/RDS_DB.rds", mitor_db))
-
+    
   } else {
+    print("entre al primer else de add_to_RDS")
+    
     RDS_DB <- readRDS(sprintf("%s/RDS_DB.rds", mitor_db))
     # Adding the new patient as a new element of the list.
+    
     if (!RDS_DB[sprintf("%s", patient_ID)] %in% RDS_DB) {
+      
+      print("entre al segudno if de add_to_RDS")
       # Adds the patient information in the list. The element is named as the name of the patient's ID
       RDS_DB[[length(RDS_DB)+1]] <- list(Filter_Params = filter_params, Date = format(Sys.Date(), "%d/%m/%Y"), Mutations = mutations)
       names(RDS_DB)[length(RDS_DB)] <- patient_ID
-
+      
       results <- addFreq_MitoR(new_patient)
+      print("sali del addFreq_MitoR")
       Freq_MitoR <- results[[1]]
       frequency_of_interest <- results[[2]]
-
+      
       RDS_DB$Freq_MitoR <- Freq_MitoR
       saveRDS(RDS_DB, sprintf("%s/RDS_DB.rds", mitor_db))
-
+      
     } else {     # If it was already there, it removes the previous one to avoid having the same analysis twice
+      
+      print("entre al segundo else de add_to_RDS")
+      
       deleteFreq_MitoR(patient_ID)
+      
       RDS_DB[[sprintf("%s", patient_ID)]] <- NULL
-
+      
       # After removing the previous analysis, it adds the patient' again with the patient's new values to the DB
       # Adds the patient information in the list. The element is named as the name of the patient's ID
       RDS_DB[[length(RDS_DB)+1]] <- list(Filter_Params = filter_params, Date = format(Sys.Date(), "%d/%m/%Y"), Mutations = mutations)
       names(RDS_DB)[length(RDS_DB)] <- patient_ID
-
+      
+      print("entre al addFreq_MitoR")
       results <- addFreq_MitoR(new_patient)
       Freq_MitoR <- results[[1]]
       frequency_of_interest <- results[[2]]
-
+      
       RDS_DB$Freq_MitoR <- Freq_MitoR
       saveRDS(RDS_DB, sprintf("%s/RDS_DB.rds", mitor_db))
     }
@@ -70,7 +85,9 @@ add_to_RDS <- function(filtered_DF, filtered_DF2, patient_ID) {
 #' @return List with the new MitoR DB and the frequencies of the mutations of the new patients on the MitoR DB
 
 addFreq_MitoR <- function(new_patient) {
-
+  
+  print("estoy en el addFreq_MitoR")
+  
   #libPath <- dirname(dirname(dirname(system.file(package = "MitoR"))))
   mitor_db <- sprintf("%s/mitorDB/DB", Sys.getenv('R_LIBS_USER'))
   RDS_DB <- readRDS(sprintf("%s/RDS_DB.rds", mitor_db))
@@ -78,7 +95,7 @@ addFreq_MitoR <- function(new_patient) {
   new_patient <- cbind(new_patient, Count = 1, Freq_MitoR = "100 %")
   new_patient <- new_patient[c("CHROM", "POS", "REF", "ALT", "Freq_HMTVAR", "Freq_MitoR", "Count", "clinVAR", "dbSNP", "MitoMap", "Omim", "Disease",  "Franklin", "VarSome")]
   newAmount <- length(RDS_DB) # Don't substract 1 because the new patient will be saved on the RDS at the previous function
-
+  
   # newMut is a DF with the mutations that were not found in the DB before loading the new patient.
   newMut <- data.frame()
   # frequency_of_interest will be used as a new coloumn in the particular analysis of the patient.
@@ -88,7 +105,7 @@ addFreq_MitoR <- function(new_patient) {
   j <- 1 # Related to the new patient's DF rows (new_patient)
   Freq_MitoR$POS <- as.integer(Freq_MitoR$POS)
   new_patient$POS <- as.integer(new_patient$POS)
-
+  
   # It goes through the DB and the new patients's DF simultaneously. To simplify we will call them as
   # table A and table B. It goes through them checking the POS of both tables: First it checks the first
   # row of each table. If table A has a higher POS than table B, it will compare the same row of table A
@@ -96,73 +113,82 @@ addFreq_MitoR <- function(new_patient) {
   # table A, or they match their positions. In case table B has a higher position, the same will happen
   # the other way around.
   # This stops once one table has come to its last row.
-
+  
   while ((i <= nrow(Freq_MitoR)) && (j <= nrow(new_patient))){
     if (Freq_MitoR$POS[i] > new_patient$POS[j]){
+      print("entre al primer if del while")
       # In this case the DB table has increased its rows until its POS is higher than
       # the new patient's one and the mutation was not found.
       # Meaning the mutation of the patient was not in the DB and it has to be loaded as a new one.
       new_patient$Freq_MitoR[j] <- sprintf("%s%s", 100/(newAmount), "%")
       frequency_of_interest <- c(frequency_of_interest, new_patient$Freq_MitoR[j])
-
+      
       newMut <- rbind(new_patient[j, ], newMut)
       j <- j + 1
-
+      
     } else if (Freq_MitoR$POS[i] < new_patient$POS[j]){
-      # In this case the DB POS is lower tan the new patient's POS. It increases its row trying
+      # In this case the DB POS is lower than the new patient's POS. It increases its row trying
       # to match with the next mutation.
       Freq_MitoR$Freq_MitoR[i] <- sprintf("%s%s", (Freq_MitoR$Count[i]*100)/(newAmount), "%")
       i <- i + 1
-
+      
     } else if (Freq_MitoR$POS[i] == new_patient$POS[j]){ # Checks only their POS at first
       # When the mutation match, the DB values must be changed and then both DF go the their next row.
       if ((Freq_MitoR$ALT[i] == new_patient$ALT[j]) && (Freq_MitoR$REF[i] == new_patient$REF[j])){ # Chequea el resto
+        
         # Updates the allele frequency just in case it has changed in HMTVAR
         Freq_MitoR$All_freq_h[i] <- new_patient$All_freq_h[j]
-
+        
         # Increases its count and changes the DB frequency
         Freq_MitoR$Count[i] <- (Freq_MitoR$Count[i] + 1)
         Freq_MitoR$Freq_MitoR[i] <- sprintf("%s%s", (Freq_MitoR$Count[i]*100)/(newAmount), "%")
         frequency_of_interest <- c(frequency_of_interest, Freq_MitoR$Freq_MitoR[i])
         j <- j + 1
         i <- i + 1
-      } else {
-        # When the mutation POS matches but the ALT doesnt it means we have a new mutation.
-        # Meaning we follow the same path as when we are adding a new patient.
+      }
+      else {
+        # The mutation is found at the same POS but it has a different ALT nucleotide.
+        # Meaning this is a new mutation for the DB and has to be added as a new one.
         new_patient$Freq_MitoR[j] <- sprintf("%s%s", 100/(newAmount), "%")
         frequency_of_interest <- c(frequency_of_interest, new_patient$Freq_MitoR[j])
-
+        
         newMut <- rbind(new_patient[j, ], newMut)
         j <- j + 1
         i <- i + 1
       }
     }
   }
-
+  
+  print("pase primer bloque de ifs del while")
+  
   if (i < nrow(Freq_MitoR)){
+    print("entre al if del while: i < nrow(Freq_MitoR")
     # In case it has come to the end of the new patient's DF, it means there are no more mutations
     # to compare. In this case it updates the frequency of the uncompared rows of the previous DB.
     Freq_MitoR$Freq_MitoR[i:nrow(Freq_MitoR)] <- sprintf("%s%s", (Freq_MitoR$Count[i:nrow(Freq_MitoR)]*100)/newAmount, "%")
   }
-
+  
   # On the other hand, if the DB is the one that has come to the end first, all the resting mutations
   # of the new patients table are new to the DB and must be saved in the DB.
   if (j < nrow(new_patient)) {
+    print("entre al if del while: j < nrow(new_patient)")
     new_patient$Freq_MitoR[j:nrow(new_patient)] <- sprintf("%s%s", 100/(newAmount), "%")
     frequency_of_interest <- c(frequency_of_interest, new_patient$Freq_MitoR[j:nrow(new_patient)])
-
+    
     newMut <- rbind(new_patient[j:nrow(new_patient), ], newMut)
   }
-
+  
   # Makes sure there are new mutations. If not, just avoid the computational process of adding nothing
   # to a DF
   if (length(newMut) != 0){
     colnames(newMut) <- c("CHROM", "POS", "REF", "ALT", "Freq_HMTVAR", "Freq_MitoR", "Count", "clinVAR", "dbSNP", "MitoMap", "Omim", "Disease", "Franklin", "VarSome")
     Freq_MitoR <- rbind(Freq_MitoR, newMut)
   }
-
+  
   Freq_MitoR <- Freq_MitoR[order(Freq_MitoR$POS), ]
   Freq_MitoR$Freq_HMTVAR[Freq_MitoR$Freq_HMTVAR == "-"] <- "0"
+  
+  print("termine add_freq_Mitor")
   return(list(Freq_MitoR, frequency_of_interest))
 }
 
@@ -172,6 +198,8 @@ addFreq_MitoR <- function(new_patient) {
 #' @return Updated MitoR DB with fixed values of frequencies and counts
 
 deleteFreq_MitoR <- function(patient_ID) {
+  print("estoy en delete Freq_MitoR")
+  
   mitor_db <- sprintf("%s/mitorDB/DB", Sys.getenv('R_LIBS_USER'))
   RDS_DB <- readRDS(sprintf("%s/RDS_DB.rds", mitor_db))
   Freq_MitoR <- data.frame(RDS_DB[[1]])
@@ -179,21 +207,23 @@ deleteFreq_MitoR <- function(patient_ID) {
   toDelete <- unlist(RDS_DB[[patient_ID]]["Mutations"], use.names = FALSE) %>%
     strsplit("/")
   newAmount <- length(RDS_DB) - 2
-
+  
   for (i in (1:length(toDelete))){
     Freq_MitoR[(Freq_MitoR$POS == as.integer(toDelete[[i]][2])) & (Freq_MitoR$ALT == toDelete[[i]][3]), ]$Count <- (Freq_MitoR[(Freq_MitoR$POS == as.integer(toDelete[[i]][2])) & (Freq_MitoR$ALT == toDelete[[i]][3]), ]$Count - 1)
-
+    
     # In case we delete a mutation with Count = 1, just delete the entire row
-    if (Freq_MitoR[(Freq_MitoR$POS == as.integer(toDelete[[i]][2])) & (Freq_MitoR$ALT == toDelete[[i]][3]), ]$Count == 0) {
+    if (any((Freq_MitoR[(Freq_MitoR$POS == as.integer(toDelete[[i]][2])) & (Freq_MitoR$ALT == toDelete[[i]][3]), ]$Count) == 0)) {
+      print("estoy en el primer if del delete")
       Freq_MitoR <- Freq_MitoR[!((Freq_MitoR$POS == as.integer(toDelete[[i]][2])) & (Freq_MitoR$ALT == toDelete[[i]][3])), ]
     }
   }
   # Updates the frequencies of the DB
   Freq_MitoR$Freq_MitoR <- sprintf("%s%s", (Freq_MitoR$Count * 100)/newAmount, "%")
-
+  
   RDS_DB$Freq_MitoR <- Freq_MitoR
   saveRDS(RDS_DB, sprintf("%s/RDS_DB.rds", mitor_db))
-
+  
   return(Freq_MitoR)
 }
+
 
