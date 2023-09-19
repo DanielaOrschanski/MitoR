@@ -69,7 +69,7 @@ pileupPlot <- function(BAM_file, plot_mutation = TRUE, range = 5) {
         # Extract the meaningful (depending on the range) rows of the DF for the mutation plot
         inferior_row <- which(allelic_coverage$POS == (as.integer(position) - range))
         superior_row <- which(allelic_coverage$POS == (as.integer(position) + range))
-        data_mutation_plot <- allelic_coverage[inferior_row : superior_row,]
+        data_mutation_plot <- allelic_coverage[inferior_row : superior_row, ]
 
         mutation_plot <- plot_mutation_design(data_mutation_plot, alternative_allele, range)
 
@@ -152,12 +152,11 @@ genes_of_mutations <- function(mutations, gene_start_end) {
   j <- 1 # Gene Row
   genes_of_mutations <- data.frame()
 
-  while (position_of_mutations[i] < gene_start_end$start[1]) {
-    i <- i + 1
-  }
-
   while (j < nrow(gene_start_end)) {
     while ((position_of_mutations[i] > gene_start_end$start[j]) && (position_of_mutations[i] < gene_start_end$end[j])) {
+      if (gene_start_end$name[j] == "non-coding") {
+        i <- i + 1
+      }
       if (!(gene_start_end$name[j] %in% genes_of_mutations$name)) {
         genes_of_mutations <- rbind(genes_of_mutations, cbind(gene_start_end[j, ], mut = paste0(mutations[i,], sep = "", collapse = ">")))
         # Add it. Don't go to the next row becuase it migth not be the only mutation in this gene
