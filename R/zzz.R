@@ -1,7 +1,10 @@
 .onLoad <- function(libname, pkgname) {
 
   #Import BED file
-  if (interactive()) { data("bedfileMito") }
+  if (interactive()) { 
+    data("bedfileMito")
+    data("bedSNP")
+  }
   
   libPath <- dirname(dirname(dirname(system.file(package = "MitoR"))))
   mitor_sof <- sprintf("%s/mitorDB/Softwares", libPath)
