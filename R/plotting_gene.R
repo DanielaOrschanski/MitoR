@@ -56,7 +56,6 @@ pileupPlot <- function(BAM_file, plot_mutation = TRUE, range = 5) {
     
     # PLOTMUT---------
     if (plot_mutation == TRUE) {
-      print("estoy en el primer if del for del pile up plot")
       
       # Takes the mutations to plot from the DF
       mutations_to_plot <- mutations_at_genes$mut[i] %>%
@@ -187,7 +186,6 @@ genes_of_mutations <- function(mutations, gene_start_end, range) {
 #' @return Recorded gene pileup plot
 #' @import showtext
 plot_gene_design <- function(allelic_coverage, mutations_at_genes) {
-  print("estoy en plot gene design")
   
   Position <- allelic_coverage$POS
   Counts <- allelic_coverage$`Total Counts`
@@ -228,7 +226,6 @@ plot_gene_design <- function(allelic_coverage, mutations_at_genes) {
 #' @param alternative_base ALT of the mutation
 #' @return Recorded mutation pileup plot
 plot_mutation_design <- function(data_mutation_plot, alternative_base, range) {
-  print("estoy en plot mutation design")
   
   # X axis: positions
   Position <- data_mutation_plot$POS
@@ -267,7 +264,6 @@ plot_mutation_design <- function(data_mutation_plot, alternative_base, range) {
 #' @param plots_to_xlsx Nested list of pileup plots. The main list is named after the mutated genes. Inside of them there is the gene plot and all mutation plots belonging to that gene.
 #' @return WB with all the arranged plots in it
 xlsx_plot_design <- function(plots_to_xlsx) {
-  print("estoy en xlsx plot design")
   wb <- openxlsx::createWorkbook()
   
   # Sheets of the excel
