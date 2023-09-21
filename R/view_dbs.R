@@ -45,6 +45,24 @@ view_dbs <- function() {
             headerStyle = COLNAMES_STYLE,
             borderStyle = "dashed",
             borders = "columns", borderColour = "black")
+
+  for (i in 1:nrow(mut_DB)){
+    x <- mut_DB$Franklin[i]
+    names(x) <- c("View on Franklin DB")
+    class(x) <- "hyperlink"
+    y <- mut_DB$VarSome[i]
+    names(y) <- c("View on VarSome DB")
+    class(y) <- "hyperlink"
+    z <- mut_DB$dbSNP[i]
+    names(z) <- c("View on dbSNP DB")
+    class(z) <- "hyperlink"
+
+    openxlsx::writeData(wb_dbs, sheet = 1, x = x, startRow = i+1, startCol = 13)
+    openxlsx::writeData(wb_dbs, sheet = 1, x = y, startRow = i+1, startCol = 14)
+    openxlsx::writeData(wb_dbs, sheet = 1, x = z, startRow = i+1, startCol = 9)
+  }
+  setColWidths(wb_dbs, sheet = 1, cols = c(1:ncol(mut_DB)), widths = "auto")
+
   writeData(wb_dbs, sheet = 2, x = GenesDB,
             headerStyle = COLNAMES_STYLE,
             borderStyle = "dashed",
@@ -63,3 +81,4 @@ view_dbs <- function() {
   browseURL(paste(Sys.getenv('R_LIBS_USER'), "/mitorDB/DB/DataBases.xlsx", sep=""))
 
 }
+
