@@ -14,11 +14,16 @@ And the best part is that users do not need advanced computer knowledge to effec
 ## Requirements
 1. You must work on a Linux environment.
    
-3. Download R package "devtools".
+3. Download R packages "devtools" and "ExomeDepth". For ExomeDepth you might need:
+   if (!require("BiocManager", quietly = TRUE)) {
+     install.packages("BiocManager")
+    }
 
-4. Download the following Linux packages: "lsb_release", "bzip2", "libncurses5-dev"(for Ubuntu/Kali) or "ncurses-devel" (for Redhat/Fedora) , "unzip", "rpm2cpio", "cpio", "gzip", "tar", "wget", "java".
+   BiocManager::install("Biostrings")
+
+5. Download the following Linux packages: "lsb_release", "bzip2", "libncurses5-dev"(for Ubuntu/Kali) or "ncurses-devel" (for Redhat/Fedora) , "unzip", "rpm2cpio", "cpio", "gzip", "tar", "wget", "java".
    
-5. Organize each FASTA/FASTQ file of the patient in one unique folder which name must be the id of the correspondant patient.
+6. Organize each FASTA/FASTQ file of the patient in one unique folder which name must be the id of the correspondant patient.
 
 
 ## Installation
