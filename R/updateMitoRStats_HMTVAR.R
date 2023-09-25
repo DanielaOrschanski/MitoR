@@ -116,3 +116,101 @@ update_freq_MitoR <- function(numPaciente) {
 
   return(sprintf("MitoR frequencies updated. Find the report at: %s", MitoRStats_path))
 }
+
+
+
+# ----
+
+#' @title View Patient's Report
+#' @description Downloads the xlsx report of a specific patient with the data updated.
+#' @return message that indicates that the report has been updated and downloaded.
+#' @export
+#' @examples
+#' view_patient()
+
+view_patient <- function() {
+  # Choose the directory where the patient's MitoR directory is found
+  select <- rstudioapi::selectDirectory(
+    caption = "Select Directory",
+    label = "Select",
+    path = "/home/biomolecular/DATA/NGS/MITOCONDRIAL/Pacientes/"
+  )
+
+  if(length(select) == 0){ stop("Not selected") }
+
+  if (dir.exists(paste(select, "/MitoR", sep = ""))) {
+    file_list <- list.files(paste(select, "/MitoR", sep=""))
+    path_report <- file_list[endsWith(file_list, "MitoR_Report.xlsx")]
+    patient_XLSX_file <- sprintf("%s/MitoR/%s", select, path_report)
+
+  } else {
+    stop("This patient hasn't been analyzed. Please use Run_MitoR or select anaother patient.")
+  }
+
+  numPaciente <- basename(select)
+  #patient_XLSX_file <- sprintf("%s/MitoR/%s_MitoR_Report.xlsx", select, numPaciente)
+
+  # Adds or updates the MitoR frequencies of the patient analysis
+  mitor_db <- sprintf("%s/mitorDB/DB", Sys.getenv('R_LIBS_USER'))
+  RDS_DB <- readRDS(sprintf("%s/RDS_DB.rds", mitor_db))
+  Freq_MitoR <- RDS_DB$Freq_MitoR
+
+  # Reads the xlsx patient report
+  paciente_SNP <- openxlsx::read.xlsx(patient_XLSX_file, sheet = 1)
+
+  # Takes the mutations of the patient
+  mutations <- RDS_DB[[sprintf("%s", numPaciente)]]["Mutations"]
+  toAddFreq <- strsplit(unlist(mutations, use.names = FALSE), "/")
+
+  # Save in a new variable the MitoR DB frequencies of the mutations found in the patient
+  freqMut_MitoRStats <- c()
+  for (i in (1:length(toAddFreq))){
+    freqMut_MitoRStats <- c(freqMut_MitoRStats, Freq_MitoR[(Freq_MitoR$POS == as.integer(toAddFreq[[i]][2])) & (Freq_MitoR$ALT == toAddFreq[[i]][3]), ]$Freq_MitoR)
+  }
+
+  if ("Freq_MitoR" %in% colnames(paciente_SNP)) { # If its an update of the frequency
+    paciente_SNP$Freq_MitoR <- freqMut_MitoRStats
+  } else { # If this is the first time it adds the frequency
+    paciente_SNP <- cbind(paciente_SNP, Freq_MitoR = freqMut_MitoRStats)
+  }
+
+  paciente_SNP_updated <- openxlsx::loadWorkbook(patient_XLSX_file)
+
+  writeData(paciente_SNP_updated, sheet = "SNP-INDEL", x = paciente_SNP)
+
+  COLNAMES_STYLE <- createStyle(
+    fontSize = 12,
+    textDecoration = "bold",
+    halign = "center", valign = "center", border = "TopBottom",
+    borderColour = "black")
+  hyperlink_style <- openxlsx::createStyle(fontColour = "#0000FF")
+
+  writeData(paciente_SNP_updated, sheet = "SNP-INDEL", x = paciente_SNP,
+            headerStyle = COLNAMES_STYLE,
+            borderStyle = "dashed",
+            borders = "columns", borderColour = "black")
+
+  setColWidths(paciente_SNP_updated, sheet = "SNP-INDEL", cols = c(1:10, 12, 14, 15, 17:19), widths = "auto")
+
+  for (i in 1:nrow(paciente_SNP)){
+    x <- paciente_SNP$Franklin[i]
+    names(x) <- c("View on Franklin DB")
+    class(x) <- "hyperlink"
+    y <- paciente_SNP$VarSome[i]
+    names(y) <- c("View on VarSome DB")
+    class(y) <- "hyperlink"
+    z <- paciente_SNP$dbSNP[i]
+    names(z) <- c("View on dbSNP DB")
+    class(z) <- "hyperlink"
+
+    openxlsx::writeData(paciente_SNP_updated, sheet = "SNP-INDEL", x = x, startRow = i+1, startCol = 14)
+    openxlsx::writeData(paciente_SNP_updated, sheet = "SNP-INDEL", x = y, startRow = i+1, startCol = 15)
+    openxlsx::writeData(paciente_SNP_updated, sheet = "SNP-INDEL", x = z, startRow = i+1, startCol = 10)
+  }
+
+  # Guardamos el actualizado en el mismo path que salio del selectDirectory
+  saveWorkbook(paciente_SNP_updated, patient_XLSX_file, overwrite = TRUE)
+
+  browseURL(patient_XLSX_file)
+  return(sprintf("MitoR frequencies updated. Find the report at: %s", patient_XLSX_file))
+}
